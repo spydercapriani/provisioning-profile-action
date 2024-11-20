@@ -1,24 +1,81 @@
 import * as core from '@actions/core'
-import { wait } from './wait'
+import {
+  getAllProvisioningProfiles,
+  saveProvisioningProfiles
+} from './provisioning'
+import { ProfilesGetCollectionFilterProfileTypeEnum } from 'appstore-connect-sdk/dist/openapi'
+
+// Function to check if a value is a valid enum member
+function isValidProfileType(
+  type: string
+): type is ProfilesGetCollectionFilterProfileTypeEnum {
+  return Object.values(ProfilesGetCollectionFilterProfileTypeEnum).includes(
+    type as ProfilesGetCollectionFilterProfileTypeEnum
+  )
+}
 
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
  */
 export async function run(): Promise<void> {
+  const ascIssuerId = core.getInput('appstore-connect-api-issuer-id', {
+    required: true
+  })
+  const ascKeyId = core.getInput('appstore-connect-api-key-id', {
+    required: true
+  })
+  const ascKeyContent = core.getInput('appstore-connect-api-key-content', {
+    required: true
+  })
+  // *SECURITY* Hide the API key content from the logs
+  core.setSecret(ascKeyContent)
+
+  const defaultProfileTypes: ProfilesGetCollectionFilterProfileTypeEnum[] = [
+    'IOS_APP_DEVELOPMENT',
+    'IOS_APP_STORE',
+    'IOS_APP_ADHOC',
+    'IOS_APP_INHOUSE'
+  ]
+
+  // Validate the profile types
+  const profileTypes = (
+    core.getMultilineInput('profile-types', { required: false }) ||
+    defaultProfileTypes
+  )
+    .map(type => type.trim())
+    .filter(type => isValidProfileType(type))
+
+  if (profileTypes.length === 0) {
+    core.setFailed('No valid profile types provided.')
+  }
+
   try {
-    const ms: string = core.getInput('milliseconds')
+    core.startGroup('Fetching Provisioning Profiles')
+    const profiles = await getAllProvisioningProfiles(
+      profileTypes,
+      ascIssuerId,
+      ascKeyId,
+      ascKeyContent
+    )
+    core.endGroup()
 
-    // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
-    core.debug(`Waiting ${ms} milliseconds ...`)
+    // Leverage the runner's temp directory when testing locally, otherwise use the runner's home directory
+    const provisioningProfilesDirectory =
+      `${process.env.GITHUB_ACTIONS}` === 'false'
+        ? `${process.env.RUNNER_TEMP}/Provisioning Profiles`
+        : `${process.env.HOME}/Library/MobileDevice/Provisioning Profiles`
 
-    // Log the current timestamp, wait, then log the new timestamp
-    core.debug(new Date().toTimeString())
-    await wait(parseInt(ms, 10))
-    core.debug(new Date().toTimeString())
+    core.startGroup('Saving Provisioning Profiles')
+    const createdProfiles = await saveProvisioningProfiles(
+      profiles,
+      provisioningProfilesDirectory
+    )
+    core.info(`Loaded ${createdProfiles.length} provisioning profiles`)
+    core.debug(`profiles: ${JSON.stringify(createdProfiles, null, 2)}`)
+    core.endGroup()
 
-    // Set outputs for other workflow steps to use
-    core.setOutput('time', new Date().toTimeString())
+    core.setOutput('profiles', JSON.stringify(createdProfiles, null, 2))
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message)

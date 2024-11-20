@@ -1,6 +1,6 @@
-name: 'The name of your action here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'Provisioning Profile Action'
+description: 'Manage provisioning profiles for iOS projects'
+author: 'ForeFlight, LLC'
 
 # Add your action's branding here. This will appear on the GitHub Marketplace.
 branding:
@@ -9,15 +9,42 @@ branding:
 
 # Define your inputs here.
 inputs:
-  milliseconds:
-    description: 'Your input description here'
+  profile-types:
+    description:
+      'The types of profiles to download. <IOS_APP_DEVELOPMENT, IOS_APP_STORE,
+      IOS_APP_ADHOC, IOS_APP_INHOUSE, MAC_APP_DEVELOPMENT, MAC_APP_STORE,
+      MAC_APP_DIRECT, TVOS_APP_DEVELOPMENT, TVOS_APP_STORE, TVOS_APP_ADHOC,
+      TVOS_APP_INHOUSE>'
+    required: false
+    default: |
+      IOS_APP_DEVELOPMENT
+      IOS_APP_STORE
+      IOS_APP_ADHOC
+      IOS_APP_INHOUSE
+  appstore-connect-api-issuer-id:
+    description: 'App Store Connect API Issuer ID'
     required: true
-    default: '1000'
+  appstore-connect-api-key-id:
+    description: 'App Store Connect API Key ID'
+    required: true
+  appstore-connect-api-key-content:
+    description: 'App Store Connect API Key Content'
+    required: true
 
 # Define your outputs here.
 outputs:
-  time:
-    description: 'Your output description here'
+  # Example Output:
+  # [
+  #   {
+  #     "uuid": "9188a3d6-d9a5-443f-b87a-9419e9c50351",
+  #     "name": "Some Profile Name",
+  #     "path": "${HOME}/Library/MobileDevice/Provisioning Profiles/Some Profile Name.mobileprovision"
+  #   }
+  # ]
+  profiles:
+    description:
+      'A JSON string containing an array of objects with the `uuid`, `name`, and
+      `path` of each provisioning profile'
 
 runs:
   using: node20

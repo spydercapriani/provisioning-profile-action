@@ -46,19 +46,27 @@ jobs:
 
   test-action:
     name: GitHub Actions Test
-    runs-on: ubuntu-latest
+    runs-on:
+      group: ent/Mobile
+      labels:
+        - self-hosted
+        - macOS
 
     steps:
       - name: Checkout
         id: checkout
         uses: actions/checkout@v4
 
-      - name: Test Local Action
-        id: test-action
+      - name: Fetch Provisioning Profiles
+        id: provisioning-profiles
         uses: ./
         with:
-          milliseconds: 2000
+          appstore-connect-api-issuer-id:
+            ${{ secrets.APPSTORE_CONNECT_API_ISSUER_ID }}
+          appstore-connect-api-key-id:
+            ${{ secrets.APPSTORE_CONNECT_API_KEY_ID }}
+          appstore-connect-api-key-content:
+            ${{ secrets.APPSTORE_CONNECT_API_KEY_CONTENT }}
 
       - name: Print Output
-        id: output
-        run: echo "${{ steps.test-action.outputs.time }}"
+        run: echo '${{ steps.provisioning-profiles.outputs.profiles }}'

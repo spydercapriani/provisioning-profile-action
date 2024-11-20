@@ -1,4 +1,4 @@
-# Create a GitHub Action Using TypeScript
+# Provisioning Profile Action
 
 [![GitHub Super-Linter](https://github.com/actions/typescript-action/actions/workflows/linter.yml/badge.svg)](https://github.com/super-linter/super-linter)
 ![CI](https://github.com/actions/typescript-action/actions/workflows/ci.yml/badge.svg)
@@ -6,35 +6,32 @@
 [![CodeQL](https://github.com/actions/typescript-action/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/actions/typescript-action/actions/workflows/codeql-analysis.yml)
 [![Coverage](./badges/coverage.svg)](./badges/coverage.svg)
 
-Use this template to bootstrap the creation of a TypeScript action. :rocket:
+## Action Usage
 
-This template includes compilation support, tests, a validation workflow,
-publishing, and versioning guidance.
+```yaml
+steps:
+  ...
+  - name: Setup Provisioning Profiles
+    id: provisioning-profiles
+    uses: foreflight/provisioning-profile-action@latest
+    with:
+      ...
 
-If you are new, there's also a simpler introduction in the
-[Hello world JavaScript action repository](https://github.com/actions/hello-world-javascript-action).
+  - name: Print Step Outputs
+    run: echo "${{ steps.provisioning-profiles.outputs.profiles }}"
+```
 
-## Create Your Own Action
+For example workflow runs, check out the
+[Actions tab](https://github.com/foreflight/provisioning-profile-action/actions)!
+:rocket:
 
-To create your own action, you can use this repository as a template! Just
-follow the below instructions:
+> [`ci.yml`](./.github/workflows/ci.yml) demonstrates how to reference this
+> action.
 
-1. Click the **Use this template** button at the top of the repository
-1. Select **Create a new repository**
-1. Select an owner and name for your new repository
-1. Click **Create repository**
-1. Clone your new repository
+## Development Setup
 
-> [!IMPORTANT]
->
-> Make sure to remove or update the [`CODEOWNERS`](./CODEOWNERS) file! For
-> details on how to use this file, see
-> [About code owners](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners).
-
-## Initial Setup
-
-After you've cloned the repository to your local machine or codespace, you'll
-need to perform some initial setup steps before you can develop your action.
+After you've cloned the repository to your local machine, you'll need to perform
+some initial setup steps before you can develop against this action.
 
 > [!NOTE]
 >
@@ -46,6 +43,12 @@ need to perform some initial setup steps before you can develop your action.
 > the correct version when you `cd` into the repository. Additionally, this
 > `.node-version` file is used by GitHub Actions in any `actions/setup-node`
 > actions.
+
+1. Create your `.env` file
+
+   ```bash
+   cp .env.example .env
+   ```
 
 1. :hammer_and_wrench: Install the dependencies
 
@@ -59,7 +62,7 @@ need to perform some initial setup steps before you can develop your action.
    npm run bundle
    ```
 
-1. :white_check_mark: Run the tests
+1. :white_check_mark: Validate tests are passing
 
    ```bash
    $ npm test
@@ -71,44 +74,6 @@ need to perform some initial setup steps before you can develop your action.
 
    ...
    ```
-
-## Update the Action Metadata
-
-The [`action.yml`](action.yml) file defines metadata about your action, such as
-input(s) and output(s). For details about this file, see
-[Metadata syntax for GitHub Actions](https://docs.github.com/en/actions/creating-actions/metadata-syntax-for-github-actions).
-
-When you copy this repository, update `action.yml` with the name, description,
-inputs, and outputs for your action.
-
-## Update the Action Code
-
-The [`src/`](./src/) directory is the heart of your action! This contains the
-source code that will be run when your action is invoked. You can replace the
-contents of this directory with your own code.
-
-There are a few things to keep in mind when writing your action code:
-
-- Most GitHub Actions toolkit and CI/CD operations are processed asynchronously.
-  In `main.ts`, you will see that the action is run in an `async` function.
-
-  ```javascript
-  import * as core from '@actions/core'
-  //...
-
-  async function run() {
-    try {
-      //...
-    } catch (error) {
-      core.setFailed(error.message)
-    }
-  }
-  ```
-
-  For more information about the GitHub Actions toolkit, see the
-  [documentation](https://github.com/actions/toolkit/blob/master/README.md).
-
-So, what are you waiting for? Go ahead and start customizing your action!
 
 1. Create a new branch
 
@@ -180,60 +145,6 @@ Your action is now published! :rocket:
 For information about versioning your action, see
 [Versioning](https://github.com/actions/toolkit/blob/master/docs/action-versioning.md)
 in the GitHub Actions toolkit.
-
-## Validate the Action
-
-You can now validate the action by referencing it in a workflow file. For
-example, [`ci.yml`](./.github/workflows/ci.yml) demonstrates how to reference an
-action in the same repository.
-
-```yaml
-steps:
-  - name: Checkout
-    id: checkout
-    uses: actions/checkout@v4
-
-  - name: Test Local Action
-    id: test-action
-    uses: ./
-    with:
-      milliseconds: 1000
-
-  - name: Print Output
-    id: output
-    run: echo "${{ steps.test-action.outputs.time }}"
-```
-
-For example workflow runs, check out the
-[Actions tab](https://github.com/actions/typescript-action/actions)! :rocket:
-
-## Usage
-
-After testing, you can create version tag(s) that developers can use to
-reference different stable versions of your action. For more information, see
-[Versioning](https://github.com/actions/toolkit/blob/master/docs/action-versioning.md)
-in the GitHub Actions toolkit.
-
-To include the action in a workflow in another repository, you can use the
-`uses` syntax with the `@` symbol to reference a specific branch, tag, or commit
-hash.
-
-```yaml
-steps:
-  - name: Checkout
-    id: checkout
-    uses: actions/checkout@v4
-
-  - name: Test Local Action
-    id: test-action
-    uses: actions/typescript-action@v1 # Commit with the `v1` tag
-    with:
-      milliseconds: 1000
-
-  - name: Print Output
-    id: output
-    run: echo "${{ steps.test-action.outputs.time }}"
-```
 
 ## Publishing a New Release
 

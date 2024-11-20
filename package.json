@@ -1,21 +1,22 @@
 {
-  "name": "typescript-action",
-  "description": "GitHub Actions TypeScript template",
-  "version": "0.0.0",
-  "author": "",
+  "name": "provisioning-profile-action",
+  "description": "GitHub Action for fetching provisioning profiles",
+  "version": "1.0.0",
+  "author": "ForeFlight, LLC",
   "private": true,
-  "homepage": "https://github.com/actions/typescript-action",
+  "homepage": "https://github.com/foreflight/provisioning-profile-action",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/actions/typescript-action.git"
+    "url": "git+https://github.com/foreflight/provisioning-profile-action.git"
   },
   "bugs": {
-    "url": "https://github.com/actions/typescript-action/issues"
+    "url": "https://github.com/foreflight/provisioning-profile-action/issues"
   },
   "keywords": [
-    "actions",
     "node",
-    "setup"
+    "provisioning",
+    "profiles",
+    "appstoreconnect"
   ],
   "exports": {
     ".": "./dist/index.js"
@@ -67,7 +68,8 @@
     ]
   },
   "dependencies": {
-    "@actions/core": "^1.11.1"
+    "@actions/core": "^1.11.1",
+    "appstore-connect-sdk": "^1.1.0"
   },
   "devDependencies": {
     "@github/local-action": "^2.2.0",
