@@ -44,7 +44,11 @@ export async function getAllProvisioningProfiles(
           }
           return profile.attributes
         })
-        .filter((attr): attr is ProfileAttributes => attr !== undefined)
+        .filter((attr): attr is ProfileAttributes => {
+          if (!attr || !attr.expirationDate) return false
+          const expirationDate = new Date(attr.expirationDate)
+          return expirationDate > new Date()
+        })
     )
     .catch((err: Error) => {
       throw new Error(`Failed to fetch provisioning profiles: ${err.message}`, {

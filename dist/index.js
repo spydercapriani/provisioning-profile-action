@@ -172455,7 +172455,12 @@ async function getAllProvisioningProfiles(profileTypes, ascIssuerId, ascKeyId, a
         }
         return profile.attributes;
     })
-        .filter((attr) => attr !== undefined))
+        .filter((attr) => {
+        if (!attr || !attr.expirationDate)
+            return false;
+        const expirationDate = new Date(attr.expirationDate);
+        return expirationDate > new Date();
+    }))
         .catch((err) => {
         throw new Error(`Failed to fetch provisioning profiles: ${err.message}`, {
             cause: err
