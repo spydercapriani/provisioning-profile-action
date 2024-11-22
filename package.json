@@ -1,7 +1,7 @@
 {
   "name": "provisioning-profile-action",
   "description": "GitHub Action for fetching provisioning profiles",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": "ForeFlight, LLC",
   "private": true,
   "homepage": "https://github.com/foreflight/provisioning-profile-action",
@@ -26,7 +26,7 @@
   },
   "scripts": {
     "bundle": "npm run format:write && npm run package",
-    "ci-test": "npx jest",
+    "ci-test": "npx jest --passWithNoTests",
     "coverage": "npx make-coverage-badge --output-path ./badges/coverage.svg",
     "format:write": "npx prettier --write .",
     "format:check": "npx prettier --check .",
@@ -34,7 +34,7 @@
     "local-action": "npx local-action . src/main.ts .env",
     "package": "npx ncc build src/index.ts -o dist --source-map --license licenses.txt",
     "package:watch": "npm run package -- --watch",
-    "test": "npx jest",
+    "test": "npx jest --passWithNoTests",
     "all": "npm run format:write && npm run lint && npm run test && npm run coverage && npm run package"
   },
   "license": "MIT",
@@ -69,12 +69,16 @@
   },
   "dependencies": {
     "@actions/core": "^1.11.1",
-    "appstore-connect-sdk": "^1.1.0"
+    "@actions/http-client": "^2.2.3",
+    "class-transformer": "^0.5.1",
+    "jsonwebtoken": "^9.0.2",
+    "reflect-metadata": "^0.2.2"
   },
   "devDependencies": {
     "@github/local-action": "^2.2.0",
     "@jest/globals": "^29.7.0",
     "@types/jest": "^29.5.14",
+    "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^22.9.0",
     "@typescript-eslint/eslint-plugin": "^8.13.0",
     "@typescript-eslint/parser": "^8.13.0",

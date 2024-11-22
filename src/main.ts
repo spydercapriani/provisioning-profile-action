@@ -1,50 +1,44 @@
+import 'reflect-metadata'
 import * as core from '@actions/core'
-import {
-  getAllProvisioningProfiles,
-  saveProvisioningProfiles
-} from './provisioning'
-import { ProfilesGetCollectionFilterProfileTypeEnum } from 'appstore-connect-sdk/dist/openapi'
-
-// Function to check if a value is a valid enum member
-function isValidProfileType(
-  type: string
-): type is ProfilesGetCollectionFilterProfileTypeEnum {
-  return Object.values(ProfilesGetCollectionFilterProfileTypeEnum).includes(
-    type as ProfilesGetCollectionFilterProfileTypeEnum
-  )
-}
+import { plainToInstance } from 'class-transformer'
+import { fetchProvisioningProfiles } from './provisioning'
+import { AppStoreConnectApiAuthConfig, ProfileType } from './models'
 
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
  */
 export async function run(): Promise<void> {
-  const ascIssuerId = core.getInput('appstore-connect-api-issuer-id', {
-    required: true
-  })
-  const ascKeyId = core.getInput('appstore-connect-api-key-id', {
-    required: true
-  })
-  const ascKeyContent = core.getInput('appstore-connect-api-key-content', {
-    required: true
-  })
-  // *SECURITY* Hide the API key content from the logs
-  core.setSecret(ascKeyContent)
+  const appStoreConnectAuthConfig: AppStoreConnectApiAuthConfig =
+    plainToInstance(
+      AppStoreConnectApiAuthConfig,
+      JSON.parse(
+        core.getInput('appstore-connect-json', {
+          required: true
+        })
+      )
+    )
+  // *SECURITY* Hide the auth config from any logs to avoid leaking the key in any logs
+  core.setSecret(JSON.stringify(appStoreConnectAuthConfig))
+  core.setSecret(JSON.stringify(appStoreConnectAuthConfig, null, 2))
+  // *END SECURITY*
+  core.debug(`ASC - Issuer ID: ${appStoreConnectAuthConfig.issuerId}`)
+  core.debug(`ASC - Key ID: ${appStoreConnectAuthConfig.keyId}`)
+  core.debug(`ASC - Audience: ${appStoreConnectAuthConfig.audience}`)
 
-  const defaultProfileTypes: ProfilesGetCollectionFilterProfileTypeEnum[] = [
-    'IOS_APP_DEVELOPMENT',
-    'IOS_APP_STORE',
-    'IOS_APP_ADHOC',
-    'IOS_APP_INHOUSE'
+  const defaultProfileTypes: ProfileType[] = [
+    ProfileType.iOSAppDevelopment,
+    ProfileType.iOSAppStore,
+    ProfileType.iOSAppAdhoc,
+    ProfileType.iOSAppInHouse
   ]
 
   // Validate the profile types
   const profileTypes = (
     core.getMultilineInput('profile-types', { required: false }) ||
     defaultProfileTypes
-  )
-    .map(type => type.trim())
-    .filter(type => isValidProfileType(type))
+  ).map(type => ProfileType.fromString(type.trim()))
+  core.debug(`Profile Types: ${JSON.stringify(profileTypes, null, 2)}`)
 
   if (profileTypes.length === 0) {
     core.setFailed('No valid profile types provided.')
@@ -52,11 +46,9 @@ export async function run(): Promise<void> {
 
   try {
     core.startGroup('Fetching Provisioning Profiles')
-    const profiles = await getAllProvisioningProfiles(
-      profileTypes,
-      ascIssuerId,
-      ascKeyId,
-      ascKeyContent
+    const profiles = await fetchProvisioningProfiles(
+      appStoreConnectAuthConfig,
+      profileTypes
     )
     core.endGroup()
 
@@ -67,12 +59,17 @@ export async function run(): Promise<void> {
         : `${process.env.HOME}/Library/MobileDevice/Provisioning Profiles`
 
     core.startGroup('Saving Provisioning Profiles')
-    const createdProfiles = await saveProvisioningProfiles(
-      profiles,
-      provisioningProfilesDirectory
+    const createdProfiles = await Promise.all(
+      profiles
+        .filter(profile => !profile.isExpired())
+        .map(async profile => {
+          core.info(
+            `Saving provisioning profile ${profile.name} to ${provisioningProfilesDirectory}`
+          )
+          return profile.saveTo(provisioningProfilesDirectory)
+        })
     )
-    core.info(`Loaded ${createdProfiles.length} provisioning profiles`)
-    core.debug(`profiles: ${JSON.stringify(createdProfiles, null, 2)}`)
+    core.info(`Saved ${createdProfiles.length} provisioning profiles`)
     core.endGroup()
 
     core.setOutput('profiles', JSON.stringify(createdProfiles, null, 2))

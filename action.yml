@@ -21,14 +21,18 @@ inputs:
       IOS_APP_STORE
       IOS_APP_ADHOC
       IOS_APP_INHOUSE
-  appstore-connect-api-issuer-id:
-    description: 'App Store Connect API Issuer ID'
-    required: true
-  appstore-connect-api-key-id:
-    description: 'App Store Connect API Key ID'
-    required: true
-  appstore-connect-api-key-content:
-    description: 'App Store Connect API Key Content'
+
+  # Example JSON:
+  # {
+  #   "keyId": "<keyId>",
+  #   "issuerId": "<issuerId>",
+  #   "keyContent": "<base64 encoded private key content>",
+  #   "audience": "<AppStore|Enterprise>"
+  # }
+  appstore-connect-json:
+    description:
+      'A JSON string containing an array of objects with the `keyId`,
+      `issuerId`, `keyContent`, and `audience` of each App Store Connect API key'
     required: true
 
 # Define your outputs here.
