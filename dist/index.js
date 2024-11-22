@@ -33604,10 +33604,8 @@ __decorate([
     (0, class_transformer_1.Transform)(({ obj }) => {
         // *SECURITY* Hide the profile content from any logs
         core.setSecret(obj.attributes.profileContent);
-        const decoded = Buffer.from(obj.attributes.profileContent, 'base64');
-        core.setSecret(decoded.toString());
         // *END SECURITY*
-        return decoded;
+        return Buffer.from(obj.attributes.profileContent, 'base64');
     }),
     __metadata("design:type", Buffer)
 ], Profile.prototype, "profile", void 0);
