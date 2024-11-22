@@ -33704,31 +33704,61 @@ const class_transformer_1 = __nccwpck_require__(451);
 const models_1 = __nccwpck_require__(6293);
 class AppStoreConnectRequestHandler {
     authConfig;
+    expiresAfter;
     scope;
-    constructor(authConfig, scope) {
+    token;
+    constructor(authConfig, expiresAfter, scope) {
         this.authConfig = authConfig;
+        this.expiresAfter = expiresAfter;
         this.scope = scope;
+        this.token = generateJWTToken(this.authConfig, this.expiresAfter, this.scope);
     }
+    /**
+     * Prepares the HTTP request by adding the JWT bearer token to the Authorization header.
+     * This is called automatically by the HttpClient before making each request.
+     *
+     * @param options - The HTTP request options to modify
+     */
     prepareRequest(options) {
         if (!options.headers) {
             options.headers = {};
         }
-        // TODO: Consider not generating a new token for each request to avoid rate limiting
-        const token = generateJWTToken(this.authConfig, 1200, // 20 minutes (Max allowed by App Store Connect API)
-        this.scope);
-        options.headers['Authorization'] = `Bearer ${token}`;
+        options.headers['Authorization'] = `Bearer ${this.token}`;
     }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    /**
+     * Determines if this handler can handle authentication for the given response.
+     * Returns true for 401 (Unauthorized), 403 (Forbidden), and 429 (Rate Limit) status codes
+     * which indicate the request failed due to authentication/authorization issues.
+     *
+     * @param response - The HTTP response from the failed request
+     * @returns true if this handler can handle the authentication failure, false otherwise
+     */
     canHandleAuthentication(response) {
-        // This handler does not handle authentication challenges
-        return false;
+        switch (response.message.statusCode) {
+            case 401: // Unauthorized
+            case 403: // Forbidden
+            case 429: // Rate limit exceeded
+                return true;
+            default:
+                return false;
+        }
     }
-    async handleAuthentication(httpClient, // eslint-disable-line @typescript-eslint/no-unused-vars
-    requestInfo, // eslint-disable-line @typescript-eslint/no-unused-vars
-    data // eslint-disable-line @typescript-eslint/no-unused-vars
-    ) {
-        // Since this handler does not handle authentication challenges, just return a rejected promise
-        return Promise.reject(new Error('JWT RequestHandler does not support authentication challenges'));
+    /**
+     * Handles authentication failures by generating a new JWT token and retrying the failed request.
+     * This is called automatically by the HttpClient when a request fails with a 401, 403, or 429 status code.
+     *
+     * @param httpClient - The HttpClient instance making the request
+     * @param requestInfo - Information about the failed request including URL and options
+     * @param data - The request body data, if any
+     * @returns A Promise that resolves with the response from retrying the request
+     */
+    async handleAuthentication(httpClient, requestInfo, data) {
+        // Generate a new token and retry the request once
+        core.warning('Authentication failed, generating new token and retrying request');
+        this.token = generateJWTToken(this.authConfig, this.expiresAfter, this.scope);
+        // Retry the request with new token
+        this.prepareRequest(requestInfo.options);
+        return httpClient.requestRaw(requestInfo, data);
     }
 }
 /**
@@ -33773,17 +33803,19 @@ function generateJWTToken(authConfig, expiresAfter, scope) {
  * @returns A Promise that resolves when the profiles have been fetched
  */
 async function fetchProvisioningProfiles(authConfig, profileTypes) {
+    const profileTypeFilter = profileTypes.map(type => type.toString()).join(',');
     const httpClient = new http_client_1.HttpClient(undefined, [
-        new AppStoreConnectRequestHandler(authConfig, [
+        new AppStoreConnectRequestHandler(authConfig, 1200, // 20 minutes (Max allowed by App Store Connect API)
+        [
             'GET /v1/profiles',
             'GET /v1/profiles?filter[profileState]=ACTIVE',
-            `GET /v1/profiles?filter[profileState]=ACTIVE&filter[profileType]=${profileTypes.map(type => type.toString()).join(',')}`
+            `GET /v1/profiles?filter[profileState]=ACTIVE&filter[profileType]=${profileTypeFilter}`
         ])
     ]);
     const baseURL = authConfig.audience === models_1.AppStoreConnectApiAudience.AppStore
         ? models_1.AppStoreConnectApiBaseURL.AppStore
         : models_1.AppStoreConnectApiBaseURL.Enterprise;
-    const url = `${baseURL}/v1/profiles?filter[profileState]=ACTIVE&filter[profileType]=${profileTypes.map(type => type.toString()).join(',')}`;
+    const url = `${baseURL}/v1/profiles?filter[profileState]=ACTIVE&filter[profileType]=${profileTypeFilter}`;
     const profiles = new models_1.Profiles();
     async function fetchProfiles(url) {
         core.debug(`Fetching profiles from ${url}`);
