@@ -57,11 +57,21 @@ jobs:
         id: checkout
         uses: actions/checkout@v4
 
-      - name: Fetch Provisioning Profiles
-        id: provisioning-profiles
+      - name: Fetch AppStore Provisioning Profiles
+        id: appstore-provisioning-profiles
         uses: ./
         with:
-          appstore-connect-json: ${{ secrets.APPSTORE_CONNECT_JSON }}
+          appstore-connect-json: ${{ secrets.FFM_ASC_APPSTORE_JSON }}
+
+      - name: Fetch Enterprise Provisioning Profiles
+        id: enterprise-provisioning-profiles
+        uses: ./
+        with:
+          appstore-connect-json: ${{ secrets.FFM_ASC_ENTERPRISE_JSON }}
 
       - name: Print Output
-        run: echo '${{ steps.provisioning-profiles.outputs.profiles }}'
+        run: |
+          echo 'AppStore Provisioning Profiles:'
+          echo '${{ steps.appstore-provisioning-profiles.outputs.profiles }}'
+          echo 'Enterprise Provisioning Profiles:'
+          echo '${{ steps.enterprise-provisioning-profiles.outputs.profiles }}'
