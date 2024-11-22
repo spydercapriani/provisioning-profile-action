@@ -39,6 +39,9 @@
   },
   "license": "MIT",
   "jest": {
+    "setupFiles": [
+      "./__tests__/jest.setup.ts"
+    ],
     "preset": "ts-jest",
     "verbose": true,
     "clearMocks": true,
