@@ -33277,10 +33277,6 @@ async function run() {
     const appStoreConnectAuthConfig = (0, class_transformer_1.plainToInstance)(models_1.AppStoreConnectApiAuthConfig, JSON.parse(core.getInput('appstore-connect-json', {
         required: true
     })));
-    // *SECURITY* Hide the auth config from any logs to avoid leaking the key in any logs
-    core.setSecret(JSON.stringify(appStoreConnectAuthConfig));
-    core.setSecret(JSON.stringify(appStoreConnectAuthConfig, null, 2));
-    // *END SECURITY*
     core.debug(`ASC - Issuer ID: ${appStoreConnectAuthConfig.issuerId}`);
     core.debug(`ASC - Key ID: ${appStoreConnectAuthConfig.keyId}`);
     core.debug(`ASC - Audience: ${appStoreConnectAuthConfig.audience}`);
@@ -33408,11 +33404,7 @@ __decorate([
 __decorate([
     (0, class_transformer_1.Expose)({ name: 'keyContent' }),
     (0, class_transformer_1.Transform)(({ value }) => {
-        // *SECURITY* Hide the key from any logs
-        core.setSecret(value);
         const decoded = Buffer.from(value, 'base64').toString();
-        core.setSecret(decoded);
-        // *END SECURITY*
         return decoded;
     }),
     __metadata("design:type", String)
@@ -33602,9 +33594,6 @@ __decorate([
 __decorate([
     (0, class_transformer_1.Expose)(),
     (0, class_transformer_1.Transform)(({ obj }) => {
-        // *SECURITY* Hide the profile content from any logs
-        core.setSecret(obj.attributes.profileContent);
-        // *END SECURITY*
         return Buffer.from(obj.attributes.profileContent, 'base64');
     }),
     __metadata("design:type", Buffer)
@@ -33769,9 +33758,6 @@ class AppStoreConnectRequestHandler {
  * @returns The generated JWT token string
  */
 function generateJWTToken(authConfig, expiresAfter, scope) {
-    // *SECURITY* Ensure the key is never accidentally exposed in any logs.
-    core.setSecret(authConfig.key);
-    // *END SECURITY*
     core.info('Generating JWT token');
     const now = Math.floor(Date.now() / 1000);
     const payload = {
@@ -33787,10 +33773,7 @@ function generateJWTToken(authConfig, expiresAfter, scope) {
         keyid: authConfig.keyId
     };
     core.debug(`JWT options: ${JSON.stringify(options, null, 2)}`);
-    // *SECURITY* Ensure the token is never accidentally exposed in any logs.
     const token = (0, jsonwebtoken_1.sign)(payload, authConfig.key, options);
-    core.setSecret(token);
-    // *END SECURITY*
     return token;
 }
 /**

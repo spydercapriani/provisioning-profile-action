@@ -35,11 +35,7 @@ export class AppStoreConnectApiAuthConfig {
 
   @Expose({ name: 'keyContent' })
   @Transform(({ value }) => {
-    // *SECURITY* Hide the key from any logs
-    core.setSecret(value)
     const decoded = Buffer.from(value, 'base64').toString()
-    core.setSecret(decoded)
-    // *END SECURITY*
     return decoded
   })
   key!: string
@@ -142,9 +138,6 @@ export class Profile {
 
   @Expose()
   @Transform(({ obj }) => {
-    // *SECURITY* Hide the profile content from any logs
-    core.setSecret(obj.attributes.profileContent)
-    // *END SECURITY*
     return Buffer.from(obj.attributes.profileContent, 'base64')
   })
   profile!: Buffer
