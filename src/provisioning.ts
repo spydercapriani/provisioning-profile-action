@@ -111,10 +111,6 @@ function generateJWTToken(
   expiresAfter: number,
   scope?: string[]
 ): string {
-  // *SECURITY* Ensure the key is never accidentally exposed in any logs.
-  core.setSecret(authConfig.key)
-  // *END SECURITY*
-
   core.info('Generating JWT token')
   const now = Math.floor(Date.now() / 1000)
   const payload = {
@@ -132,10 +128,7 @@ function generateJWTToken(
   }
   core.debug(`JWT options: ${JSON.stringify(options, null, 2)}`)
 
-  // *SECURITY* Ensure the token is never accidentally exposed in any logs.
   const token = sign(payload, authConfig.key, options)
-  core.setSecret(token)
-  // *END SECURITY*
   return token
 }
 

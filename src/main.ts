@@ -18,10 +18,6 @@ export async function run(): Promise<void> {
         })
       )
     )
-  // *SECURITY* Hide the auth config from any logs to avoid leaking the key in any logs
-  core.setSecret(JSON.stringify(appStoreConnectAuthConfig))
-  core.setSecret(JSON.stringify(appStoreConnectAuthConfig, null, 2))
-  // *END SECURITY*
   core.debug(`ASC - Issuer ID: ${appStoreConnectAuthConfig.issuerId}`)
   core.debug(`ASC - Key ID: ${appStoreConnectAuthConfig.keyId}`)
   core.debug(`ASC - Audience: ${appStoreConnectAuthConfig.audience}`)
