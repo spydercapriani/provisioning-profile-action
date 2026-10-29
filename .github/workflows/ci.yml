@@ -46,11 +46,7 @@ jobs:
 
   test-action:
     name: GitHub Actions Test
-    runs-on:
-      group: ent/Mobile
-      labels:
-        - self-hosted
-        - macOS
+    runs-on: macos-latest
 
     steps:
       - name: Checkout
