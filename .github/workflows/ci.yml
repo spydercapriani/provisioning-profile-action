@@ -57,13 +57,13 @@ jobs:
         id: appstore-provisioning-profiles
         uses: ./
         with:
-          appstore-connect-json: ${{ secrets.FFM_ASC_APPSTORE_JSON }}
+          appstore-connect-json: ${{ secrets.APPSTORE_CONNECT_JSON }}
 
       - name: Fetch Enterprise Provisioning Profiles
         id: enterprise-provisioning-profiles
         uses: ./
         with:
-          appstore-connect-json: ${{ secrets.FFM_ASC_ENTERPRISE_JSON }}
+          appstore-connect-json: ${{ secrets.ENTERPRISE_CONNECT_JSON }}
 
       - name: Print Output
         run: |
